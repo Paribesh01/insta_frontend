@@ -8,6 +8,8 @@ import SignupPage from "./routes/signup/SignupPage";
 import LoginPage from "./routes/login/LoginPage";
 import ProfilePage from "./routes/profile/ProfilePage";
 import Layout from "./components/Layout";
+import Feed from "./components/Feed";
+import RightBar from "./components/RightBar";
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -21,6 +23,14 @@ export const router = createBrowserRouter(
           <Layout>
             {" "}
             <ProfilePage />
+          </Layout>
+        }
+      />
+      <Route
+        path="/feed"
+        element={
+          <Layout>
+            <RightBar /> <Feed />
           </Layout>
         }
       />
