@@ -8,13 +8,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { useLogin } from "@/hooks/useLogin";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const { login } = useLogin();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const navigate = useNavigate();
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    await login(username, password);
+    navigate("/");
   };
 
   return (
@@ -74,7 +81,7 @@ export default function Login() {
             <p className="text-sm text-center">
               Don't have an account?{" "}
               <a
-                href="#"
+                href="/signup"
                 className="text-blue-600 font-semibold hover:underline"
               >
                 Sign up

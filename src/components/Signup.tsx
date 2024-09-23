@@ -8,14 +8,21 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { useSignup } from "@/hooks/useSignup";
+import { useNavigate } from "react-router-dom";
 
 export default function Signup() {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [email, setEmail] = useState<string>("");
+  const { signup } = useSignup();
+  const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    await signup(username, password, email);
+
+    navigate("/");
   };
 
   return (
@@ -87,7 +94,7 @@ export default function Signup() {
             <p className="text-sm text-center">
               Have an account?{" "}
               <a
-                href="#"
+                href="/login"
                 className="text-blue-600 font-semibold hover:underline"
               >
                 Login
