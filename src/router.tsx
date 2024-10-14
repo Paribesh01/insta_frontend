@@ -10,6 +10,7 @@ import ProfilePage from "./routes/profile/ProfilePage";
 import Layout from "./components/Layout";
 import Feed from "./components/Feed";
 import RightBar from "./components/RightBar";
+import { Protected } from "./protected";
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -18,9 +19,11 @@ export const router = createBrowserRouter(
       <Route
         path="/"
         element={
-          <Layout>
-            <RightBar /> <Feed />
-          </Layout>
+          <Protected>
+            <Layout>
+              <RightBar /> <Feed />
+            </Layout>
+          </Protected>
         }
       />
       <Route path="/login" element={<LoginPage />} />

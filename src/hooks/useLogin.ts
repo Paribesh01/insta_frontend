@@ -1,4 +1,4 @@
-import { axiosClient } from "@/lib/axiosconfig";
+import { axiosClient, setAxiosHeader } from "@/lib/axiosconfig";
 import { AxiosError, AxiosResponse } from "axios";
 
 export function useLogin() {
@@ -12,6 +12,7 @@ export function useLogin() {
 
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
+        setAxiosHeader(response.data.token)
       }
     } catch (e: any) {
       const axiosError = e as AxiosError;
