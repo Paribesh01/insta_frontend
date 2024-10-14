@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useLogin } from "@/hooks/useLogin";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -20,8 +21,16 @@ export default function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(username, password);
-    navigate("/");
+
+
+
+    const res: any = await login(username, password);
+    if (res?.success) {
+      navigate("/");
+      toast.success("Login Successful")
+    } else {
+      toast.error(res?.message)
+    }
   };
 
   return (

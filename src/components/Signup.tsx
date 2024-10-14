@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useSignup } from "@/hooks/useSignup";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export default function Signup() {
   const [username, setUsername] = useState<string>("");
@@ -18,11 +19,20 @@ export default function Signup() {
   const { signup } = useSignup();
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handelSignup = async (e: React.FormEvent) => {
+    console.log("hre")
     e.preventDefault();
-    await signup(username, password, email);
 
-    navigate("/");
+    const res: any = await signup(username, password, email);
+    if (res?.success) {
+      console.log("hre")
+      navigate("/login");
+      toast.success("Signup successful")
+    } else {
+      console.log("here")
+      console.log(res)
+      toast.error(res?.message)
+    }
   };
 
   return (
@@ -38,7 +48,7 @@ export default function Signup() {
           </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin}>
+          <form onSubmit={handelSignup}>
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="username" className="sr-only">

@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { AxiosError, AxiosResponse } from "axios";
 import { axiosClient } from "./lib/axiosconfig";
+import { toast } from "react-toastify";
 
 interface ProtectedProps {
     children: React.ReactNode;
@@ -19,6 +20,7 @@ export function Protected({ children }: ProtectedProps) {
                 .catch((err: AxiosError) => {
                     if (err.response?.status) {
                         localStorage.removeItem("token");
+                        toast.error("You are not logged in")
                         navigate("/login");
                     }
                 })) as AxiosResponse;

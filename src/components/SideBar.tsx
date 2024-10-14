@@ -7,11 +7,21 @@ import {
   Film,
   MessageCircle,
   Heart,
-  PlusSquare,
   Menu,
+  LogOut,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useLogout } from "@/hooks/useLogout";
 
 export default function Sidebar() {
+  const navigate = useNavigate()
+  const { logout } = useLogout()
+  const handelLogout = async () => {
+    const res = await logout()
+    if (res?.success) {
+      navigate("/login");
+    }
+  };
   return (
     <div className="fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-gray-200 p-4 overflow-y-auto">
       <div className="mb-8">
@@ -43,10 +53,6 @@ export default function Sidebar() {
           Notifications
         </Button>
         <Button variant="ghost" className="w-full justify-start text-xl py-6">
-          <PlusSquare className="mr-4 h-6 w-6" />
-          Create
-        </Button>
-        <Button variant="ghost" className="w-full justify-start text-xl py-6">
           <Avatar className="mr-4 h-6 w-6">
             <AvatarImage
               src="/placeholder.svg?height=32&width=32"
@@ -55,6 +61,10 @@ export default function Sidebar() {
             <AvatarFallback>UN</AvatarFallback>
           </Avatar>
           Profile
+        </Button>
+        <Button onClick={handelLogout} variant="ghost" className="w-full justify-start text-xl py-6">
+          <LogOut className="mr-4 h-6 w-6" />
+          LogOut
         </Button>
       </nav>
       <div className="absolute bottom-4 left-4 right-4">

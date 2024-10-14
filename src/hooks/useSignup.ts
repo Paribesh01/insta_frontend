@@ -13,12 +13,16 @@ export function useSignup() {
       if (response.data.message) {
         console.log(response.data.message);
       }
+      return { success: true }
     } catch (e: any) {
       const axiosError = e as AxiosError;
       if (axiosError.response) {
+        // You can handle error based on response status or error message
         console.error(axiosError.response.data);
+        return (axiosError.response.data)
       } else {
         console.error("Network or server error occurred.");
+        return ("Network or server error occurred.")
       }
     }
   };
