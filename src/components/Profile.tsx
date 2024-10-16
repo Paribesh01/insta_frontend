@@ -1,120 +1,272 @@
-import { useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera, Grid, Bookmark } from "lucide-react";
-import PostGrid from "./PostGrid";
+'use client'
 
-export default function Profile() {
-  const [posts, setPosts] = useState<string[]>([
-    "https://plus.unsplash.com/premium_photo-1664474619075-644dd191935f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8aW1hZ2V8ZW58MHx8MHx8fDA%3D",
-  ]);
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Grid, Settings, Camera } from "lucide-react"
+import useFetchUserProfile from "@/hooks/useProfile"
+import { axiosClient } from "@/lib/axiosconfig"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-  const randomFollowers = Math.floor(Math.random() * 10000) + 100;
-  const randomFollowing = Math.floor(Math.random() * 1000) + 50;
+export default function Component() {
+  const { userData } = useFetchUserProfile()
+  const [profile, setProfile] = useState(userData)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedProfile, setEditedProfile] = useState(profile)
+  const [file, setFile] = useState<File | null>(null)
+
+  useEffect(() => {
+    if (userData) {
+      setProfile(userData)
+      setEditedProfile(userData)
+    }
+    console.log(userData)
+  }, [userData])
+
+  const handleImageUpload = async (file: File) => {
+    const formData = new FormData()
+    formData.append('image', file)
+
+    try {
+      const response = await axiosClient.post("/user/uploadDp", formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'multipart/form-data',
+        }
+      })
+      console.log("Image upload response:", response)
+      return response.data.imageUrl // Assuming the server returns the new image URL
+    } catch (error) {
+      console.error("Error uploading image:", error)
+      throw error
+    }
+  }
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    try {
+      let newImageUrl = editedProfile.userPreferences.imageUrl
+
+      if (file) {
+        newImageUrl = await handleImageUpload(file)
+      }
+
+      const updatedProfile = {
+        bio: editedProfile.userPreferences.bio,
+        website: editedProfile.userPreferences.website,
+        gender: editedProfile.userPreferences.gender,
+        accountType: editedProfile.userPreferences.accountType,
+        imageUrl: newImageUrl,
+      }
+
+      const res = await axiosClient.post("/user/prefence", updatedProfile, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+
+      console.log("Profile update response:", res)
+      setProfile({ ...profile, userPreferences: { ...profile.userPreferences, ...updatedProfile } })
+      setIsEditing(false)
+    } catch (error) {
+      console.error("Error updating profile:", error)
+      // Handle error (e.g., show a notification)
+    }
+  }
 
   return (
-    <div className="bg-white text-gray-900 min-h-screen p-4 mt-6">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex items-center justify-between mb-12">
-          <Avatar className="w-48 h-48 border-2 border-gray-300">
-            <AvatarImage
-              src="/placeholder.svg?height=80&width=80&text=JD"
-              alt="@johndoe"
-            />
-            <AvatarFallback>JD</AvatarFallback>
+    <div className="w-full mt-9 max-w-xl mx-auto bg-white">
+      <div className="p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-xl font-semibold">{profile.username}</h1>
+          <Settings className="w-6 h-6" />
+        </div>
+
+        <div className="flex items-center justify-between mb-4">
+          <Avatar className="w-20 h-20">
+            <AvatarImage src={profile.userPreferences.imageUrl} alt={`@${profile.username}`} />
+            <AvatarFallback>{profile.username.split(' ').map(n => n[0]).join('')}</AvatarFallback>
           </Avatar>
-          <div className="flex-1 ml-16">
-            <div className="flex items-center justify-between mb-2">
-              <h1 className="text-3xl font-semibold">johndoe</h1>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-gray-900 border-gray-300"
-              >
-                ...
-              </Button>
-            </div>
-            <div className="flex space-x-2 mt-8 mb-4">
-              <Button variant="default" size="lg" className="flex-1">
-                Follow
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="flex-1 border-gray-300"
-              >
-                Message
-              </Button>
-            </div>
-            <div className="flex space-x-4 mb-4 text-lg">
-              <span>
-                <strong>{posts.length}</strong> posts
-              </span>
-              <span>
-                <strong>{randomFollowers.toLocaleString()}</strong> followers
-              </span>
-              <span>
-                <strong>{randomFollowing.toLocaleString()}</strong> following
-              </span>
-            </div>
-            <div className="text-lg">
-              <p className="font-semibold">John Doe</p>
-              <p>Digital creator</p>
-              <p>Capturing life's moments one click at a time 📸</p>
-              <a
-                href="https://johndoe.com"
-                className="text-blue-900 font-semibold"
-              >
-                johndoe.com
-              </a>
-            </div>
+          <div className="flex space-x-4 text-center">
+            {profile && profile._count && (
+              <div>
+                <div className="font-semibold">{profile._count.posts ?? 0}</div>
+                <div className="text-xs text-gray-500">Posts</div>
+              </div>
+            )}
+
+            {profile && profile._count && (
+              <>
+                <div>
+                  <div className="font-semibold">{profile._count.followers ?? 0}</div>
+                  <div className="text-xs text-gray-500">Followers</div>
+                </div>
+                <div>
+                  <div className="font-semibold">{profile._count.following ?? 0}</div>
+                  <div className="text-xs text-gray-500">Following</div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        <Tabs defaultValue="posts" className="w-full">
-          <TabsList className="w-full bg-transparent border-t border-b border-gray-300">
-            <TabsTrigger
-              value="posts"
-              className="flex-1 text-gray-600 data-[state=active]:text-gray-900 data-[state=active]:border-t-2 data-[state=active]:border-gray-900"
+        <div className="mb-4">
+          {profile.username && (
+            <h2 className="font-semibold">{profile.username}</h2>
+          )}
+
+          {profile.userPreferences?.bio && (
+            <p className="text-sm text-gray-500 whitespace-pre-line">{profile.userPreferences.bio}</p>
+          )}
+
+
+          {profile.userPreferences?.website && (
+            <a
+              href={`https://${profile.userPreferences.website}`}
+              className="text-sm text-blue-500"
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              <Grid className="h-4 w-4 mr-2" />
-              POSTS
-            </TabsTrigger>
-            <TabsTrigger
-              value="saved"
-              className="flex-1 text-gray-600 data-[state=active]:text-gray-900 data-[state=active]:border-t-2 data-[state=active]:border-gray-900"
-            >
-              <Bookmark className="h-4 w-4 mr-2" />
-              SAVED
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="posts" className="mt-4">
-            {posts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-                <Camera className="h-16 w-16 mb-4" />
-                <h2 className="text-2xl font-bold mb-2">Share Photos</h2>
-                <p className="text-center">
-                  When you share photos, they will appear on your profile.
-                </p>
+              {profile.userPreferences.website}
+            </a>
+          )}
+          {profile.userPreferences?.accountType && (
+            <p className="text-sm text-gray-500 mt-3 whitespace-pre-line">Account Type: {profile.userPreferences.accountType}</p>
+          )}
+
+          {profile.userPreferences?.gender && (
+            <p className="text-sm text-gray-500 whitespace-pre-line">Gender:{profile.userPreferences.gender}</p>
+          )}
+        </div>
+
+        <Dialog open={isEditing} onOpenChange={setIsEditing}>
+          <DialogTrigger asChild>
+            <Button className="w-full mb-4" variant="outline">Edit Profile</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Edit profile</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleEditSubmit} className="grid gap-4 py-4">
+              <div className="flex flex-col items-center gap-4">
+                <Avatar className="w-24 h-24 cursor-pointer" >
+                  <AvatarImage src={editedProfile.userPreferences.imageUrl} alt={`@${editedProfile.username}`} />
+                  <AvatarFallback>{editedProfile.username.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity">
+                    <Camera className="w-8 h-8 text-white" />
+                  </div>
+                </Avatar>
+                <input
+                  type="file"
+                  id="fileInput"
+                  onChange={(e) => {
+                    const selectedFile = e.target.files?.[0];
+                    if (selectedFile) {
+                      setFile(selectedFile);
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setEditedProfile((prev) => ({
+                          ...prev,
+                          userPreferences: {
+                            ...prev.userPreferences,
+                            imageUrl: reader.result as string,
+                          },
+                        }));
+                      };
+                      reader.readAsDataURL(selectedFile);
+                    }
+                  }}
+                  accept="image/*"
+                  className="hidden"
+                />
                 <Button
-                  className="mt-4"
-                  onClick={() =>
-                    setPosts([
-                      "/placeholder.svg?height=300&width=300&text=New+Post",
-                    ])
-                  }
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => document.getElementById('fileInput')?.click()}
                 >
-                  Share your first photo
+                  Change Profile Photo
                 </Button>
               </div>
-            ) : (
-              <PostGrid posts={posts} />
-            )}
-          </TabsContent>
-          <TabsContent value="saved">Saved content</TabsContent>
+
+
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="website" className="text-right">Website</Label>
+                <Input
+                  id="website"
+                  value={editedProfile.userPreferences?.website || ""}
+                  onChange={(e) => setEditedProfile({ ...editedProfile, userPreferences: { ...editedProfile.userPreferences, website: e.target.value } })}
+                  className="col-span-3"
+                />
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="bio" className="text-right">Bio</Label>
+                <Textarea
+                  id="bio"
+                  value={editedProfile.userPreferences?.bio || ""}
+                  onChange={(e) => setEditedProfile({ ...editedProfile, userPreferences: { ...editedProfile.userPreferences, bio: e.target.value } })}
+                  className="col-span-3"
+                />
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="gender" className="text-right">Gender</Label>
+                <Select
+                  value={editedProfile.userPreferences?.gender || ""}
+                  onValueChange={(value: any) => setEditedProfile({ ...editedProfile, userPreferences: { ...editedProfile.userPreferences, gender: value } })}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MALE">Male</SelectItem>
+                    <SelectItem value="FEMALE">Female</SelectItem>
+                    <SelectItem value="OTHERS">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="accountType" className="text-right">Account Type</Label>
+                <Select
+                  value={editedProfile.userPreferences?.accountType || ""}
+                  onValueChange={(value: any) => setEditedProfile({ ...editedProfile, userPreferences: { ...editedProfile.userPreferences, accountType: value } })}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select account type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PUBLIC">Public</SelectItem>
+                    <SelectItem value="PRIVATE">Private</SelectItem>
+
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button type="submit" className="ml-auto">Save changes</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        <Tabs defaultValue="posts" className="w-full">
+          <TabsList className="w-full">
+            <TabsTrigger value="posts" className="flex-1"><Grid className="w-5 h-5" /></TabsTrigger>
+            <TabsTrigger value="following" className="flex-1">Following</TabsTrigger>
+            <TabsTrigger value="followers" className="flex-1">Followers</TabsTrigger>
+          </TabsList>
+          <TabsContent value="posts">Posts content here...</TabsContent>
+          <TabsContent value="following">Following content here...</TabsContent>
+          <TabsContent value="followers">Followers content here...</TabsContent>
         </Tabs>
       </div>
     </div>
-  );
+  )
 }
