@@ -34,10 +34,13 @@ interface Post {
 }
 
 
+
+
 export default function ImageOverlay({ isOpen, onClose, postId }: { isOpen: boolean; onClose: () => void; postId: string }) {
   const [post, setPost] = useState<Post | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [newComment, setNewComment] = useState('');
+  const [isLiked, setIsLiked] = useState(false); // State to track if the post is liked
   const { fetchPost } = usePost();
 
   // Fetch the post when the postId changes
@@ -45,46 +48,49 @@ export default function ImageOverlay({ isOpen, onClose, postId }: { isOpen: bool
     const fetch = async () => {
       const res = await fetchPost(postId);
       setPost(res); // Set the post data once fetched
+
+      // Check if the post is liked by the current user
+      const likedResponse = await axiosClient.get(`/post/isLiked/${postId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+
+        },
+      });
+      console.log(likedResponse.data)
+
+      setIsLiked(likedResponse.data); // Update state if liked
     };
 
     if (postId) {
       fetch();
     }
-  }, [postId,]); // Only re-fetch when postId changes
+  }, [postId]);
 
-
+  // Handle new comment submission
   const handelComment = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    console.log("comment sent");
-    console.log(newComment);
-
-    // Create the JSON data object
-    const commentData = {
-      comment: newComment,
-    };
-
-    console.log(commentData);
+    const commentData = { comment: newComment };
 
     try {
-      const res = await axiosClient.post(`/comment/${postId}`, commentData, {
+      await axiosClient.post(`/comment/${postId}`, commentData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json', // Set content type to JSON
+          'Content-Type': 'application/json',
         },
       });
-      setNewComment("")
-      const updatedPost = await fetchPost(postId);
-      setPost(updatedPost); // Update the state with the latest post data
-      console.log(res);
+      setNewComment("");
+      const res = await fetchPost(postId);  // Fetch updated post comments
+      setPost(res); // Update post without affecting dialog open state
+
     } catch (error) {
       console.error("Error sending comment:", error);
     }
   }, [postId, newComment]);
 
 
-  // Like handler
-  const handleLike = useCallback(async (e: React.MouseEvent<HTMLButtonElement>) => {
+  // Handle like/unlike feature
+  const toggleLike = useCallback(async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
     const token = localStorage.getItem('token');
@@ -93,26 +99,33 @@ export default function ImageOverlay({ isOpen, onClose, postId }: { isOpen: bool
     };
 
     try {
-      await axiosClient.post(`/post/like/${postId}`, {}, { headers });
-
-      // Update the post likes count only if the post exists
-      setPost((prevPost) => {
-        if (!prevPost) return null; // Prevent updates if post is null
-
-        // Update the likes count
-        return {
+      if (isLiked) {
+        // Unlike the post if already liked
+        await axiosClient.post(`/post/unlike/${postId}`, {}, { headers });
+        setIsLiked(false);
+        setPost((prevPost: any) => ({
           ...prevPost,
           _count: {
-            ...prevPost._count,
-            likes: prevPost._count.likes + 1,
+            ...prevPost!._count,
+            likes: prevPost!._count.likes - 1,
           },
-        };
-      });
-
+        }));
+      } else {
+        // Like the post if not already liked
+        await axiosClient.post(`/post/like/${postId}`, {}, { headers });
+        setIsLiked(true);
+        setPost((prevPost: any) => ({
+          ...prevPost,
+          _count: {
+            ...prevPost!._count,
+            likes: prevPost!._count.likes + 1,
+          },
+        }));
+      }
     } catch (err) {
       console.log(err);
     }
-  }, [postId]); // Dependency on postId to ensure it fetches correctly for the current post
+  }, [isLiked, postId]);
 
   if (!post) return null; // Handle when post is null
 
@@ -154,8 +167,8 @@ export default function ImageOverlay({ isOpen, onClose, postId }: { isOpen: bool
             <DialogTitle>Comments</DialogTitle>
             <DialogDescription>
               <div className="flex items-center space-x-2">
-                <button onClick={handleLike} className="w-5 h-5 text-red-500">
-                  <Heart className="w-5 h-5 text-red-500" />
+                <button onClick={toggleLike} className={`w-5 h-5 ${isLiked ? 'text-red-500' : 'text-gray-500'}`}>
+                  <Heart className={`w-5 h-5 ${isLiked ? 'text-red-500' : 'text-gray-500'}`} />
                 </button>
                 <span>{post._count.likes} likes</span>
               </div>
@@ -183,13 +196,13 @@ export default function ImageOverlay({ isOpen, onClose, postId }: { isOpen: bool
               onChange={(e) => setNewComment(e.target.value)}
               className="flex-grow"
             />
-            <Button type="submit" size="icon" >
+            <Button type="submit" size="icon">
               <Send className="h-4 w-4" />
               <span className="sr-only">Send comment</span>
             </Button>
           </form>
         </div>
       </DialogContent>
-    </Dialog >
+    </Dialog>
   );
 }
