@@ -20,3 +20,9 @@ export const user = atom({
         },
     },
 });
+
+
+export const posts = atom({
+    key: 'posts',
+    default: [],
+});

@@ -8,24 +8,41 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Grid, Settings, Camera } from "lucide-react"
+import { Grid, Camera, PlusCircle } from "lucide-react"
 import useFetchUserProfile from "@/hooks/useProfile"
 import { axiosClient } from "@/lib/axiosconfig"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import CreatePostForm from "./CreatePost"
+import usePosts from "@/hooks/usePosts"
+import ProfilePostsGrid from "./ProfilePostGrid"
+import { useRecoilState } from "recoil"
+import { posts } from "@/Recoil/user"
 
 export default function Component() {
   const { userData } = useFetchUserProfile()
+  const { fetchUserProfile } = usePosts()
+
   const [profile, setProfile] = useState(userData)
+  const [postsProifle, setPostsProfile] = useRecoilState(posts)
   const [isEditing, setIsEditing] = useState(false)
   const [editedProfile, setEditedProfile] = useState(profile)
   const [file, setFile] = useState<File | null>(null)
+  const [isCreatingPost, setIsCreatingPost] = useState(false)
+
 
   useEffect(() => {
     if (userData) {
       setProfile(userData)
       setEditedProfile(userData)
     }
-    console.log(userData)
+    async function fetchPosts() {
+
+      fetchUserProfile()
+    }
+    fetchPosts()
+
+
+
   }, [userData])
 
   const handleImageUpload = async (file: File) => {
@@ -85,7 +102,12 @@ export default function Component() {
       <div className="p-4">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-semibold">{profile.username}</h1>
-          <Settings className="w-6 h-6" />
+
+          <Button onClick={() => setIsCreatingPost(true)} className="w-40 mb-4" variant="default">
+            <PlusCircle className="mr-2 h-4 w-4" /> Create Post
+          </Button>
+          <CreatePostForm isCreatingPost={isCreatingPost} setIsCreatingPost={setIsCreatingPost} />
+
         </div>
 
         <div className="flex items-center justify-between mb-4">
@@ -197,6 +219,7 @@ export default function Component() {
 
 
 
+
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="website" className="text-right">Website</Label>
                 <Input
@@ -258,13 +281,18 @@ export default function Component() {
 
         <Tabs defaultValue="posts" className="w-full">
           <TabsList className="w-full">
-            <TabsTrigger value="posts" className="flex-1"><Grid className="w-5 h-5" /></TabsTrigger>
-            <TabsTrigger value="following" className="flex-1">Following</TabsTrigger>
-            <TabsTrigger value="followers" className="flex-1">Followers</TabsTrigger>
+            <TabsTrigger value="posts" className="flex-1">
+              <Grid className="w-5 h-5" />
+            </TabsTrigger>
           </TabsList>
-          <TabsContent value="posts">Posts content here...</TabsContent>
-          <TabsContent value="following">Following content here...</TabsContent>
-          <TabsContent value="followers">Followers content here...</TabsContent>
+          <TabsContent value="posts">
+
+            {postsProifle.length > 0 ? (
+              <ProfilePostsGrid posts={postsProifle} />
+            ) : (
+              <div>No Posts</div>
+            )}
+          </TabsContent>
         </Tabs>
       </div>
     </div>
