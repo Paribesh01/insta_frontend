@@ -6,13 +6,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { ImagePlus, X, ChevronLeft, ChevronRight } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 export default function CreatePostForm({ isCreatingPost, setIsCreatingPost }: { isCreatingPost: boolean, setIsCreatingPost: (value: boolean) => void }) {
     const [postImages, setPostImages] = useState<File[]>([])
     const [postContent, setPostContent] = useState("")
     const [imagePreviews, setImagePreviews] = useState<string[]>([])
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
-
+    const navigate = useNavigate()
     const handleCreatePost = async (e: React.FormEvent) => {
         e.preventDefault()
         try {
@@ -33,6 +34,7 @@ export default function CreatePostForm({ isCreatingPost, setIsCreatingPost }: { 
             setPostImages([])
             setImagePreviews([])
             setCurrentImageIndex(0)
+            navigate(0)
         } catch (error) {
             console.error("Error creating post:", error)
         }

@@ -28,6 +28,7 @@ export default function Signup() {
       console.log("hre")
       navigate("/login");
       toast.success("Signup successful")
+      toast.success("Check you mail")
     } else {
       console.log("here")
       console.log(res)

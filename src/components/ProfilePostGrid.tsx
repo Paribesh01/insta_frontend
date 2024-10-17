@@ -10,7 +10,7 @@ interface Post {
     imagesUrl: string[]
     _count: {
         likes: number
-        comments: number
+        Comment: number
     }
 }
 
@@ -34,12 +34,12 @@ export default function ProfilePostsGrid({ posts }: { posts: Post[] }) {
                                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
                                             <div className="text-white flex space-x-4">
                                                 <div className="flex items-center">
-                                                    <Heart className="w-6 h-6 mr-2" />
-                                                    <span>{post._count.likes}</span>
+                                                    <MessageCircle className="w-6 h-6 mr-2" />
+                                                    <span>{post._count.Comment}</span>
                                                 </div>
                                                 <div className="flex items-center">
-                                                    <MessageCircle className="w-6 h-6 mr-2" />
-                                                    <span>{post._count.comments}</span>
+                                                    <Heart className="w-6 h-6 mr-2" />
+                                                    <span>{post._count.likes}</span>
                                                 </div>
                                             </div>
                                         </div>
