@@ -22,6 +22,17 @@ export const user = atom({
 });
 
 
+export const currentUser = atom({
+    key: 'currentUser',
+    default: {
+        username: "",
+        id: "",
+        userPreferences: {
+            imageUrl: "",
+        }
+    },
+});
+
 export const posts = atom({
     key: 'posts',
     default: [],
